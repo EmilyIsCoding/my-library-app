@@ -8,8 +8,9 @@ load_dotenv()
 endpoint = "https://openlibrary.org/search.json"
 
 parser = argparse.ArgumentParser(
-    description="Organize a list of books you've read, are reading, or want to read"
+    description="Welcome to your personal library app. Keep track of your Books and stay organized using Lists!"
     )
+
 # Search commands
 group = parser.add_mutually_exclusive_group()
 group.add_argument("-query", nargs="+", type=str, help="Enter a search query")
@@ -17,12 +18,14 @@ group.add_argument("-title", nargs="+", type=str, help="Title of the book")
 group.add_argument("-author", nargs="+", type=str, help="Author of the book")
 
 # List/Book commands
-# group.add_argument("-g", "--get", help="View a book list")
+group.add_argument("-g", "--get", nargs="+", help="View a book list by name")
 group.add_argument("-a", "--add", nargs="+", type=str, help="Add a list")
-# group.add_argument("-u", "--update", help="Update a book list")
-# group.add_argument("-d", "--delete", help="Delete a book list")
+# group.add_argument("-e", "--edit", nargs="+", help="Edit a book list by id")
+# might also be subparse...
+group.add_argument("-d", "--delete", help="Delete a book list by id")
 group.add_argument("-b", "--book", metavar=("Title, # in title List, List name"),
-                   nargs=3, help="Add a book to a list based on its # in the title search results.")
+                   nargs="+", help="Add a book to a list based on its # in the title search results.")
+# might need subparse for the above ^ a subparse of query?
 args = parser.parse_args()
 
 hostname = os.getenv('HOSTNAME')
@@ -31,13 +34,8 @@ username = os.getenv('USERNAME')
 password = os.getenv('PASSWORD')
 port_id = os.getenv('PORT_ID')
 
-print(hostname, database, username, password, port_id)
-
 conn = None
 cur = None
-
-# ERROR: connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "SonEm"
-# postgres
 
 try:
     conn = psycopg2.connect(
@@ -73,7 +71,6 @@ try:
                 """)
     
     conn.commit()
-
 except Exception as error:
     print(error)
 finally:
@@ -85,11 +82,13 @@ finally:
 def query_book(url):
     r = requests.get(url)
     print(r.json()["numFound"])
+    print(len(r.json()["docs"]))
     for index, doc in enumerate(r.json()["docs"]):
-        print(f"{index + 1}). {doc['title']} by {doc['author_name']} {doc['first_publish_year']}.")
-        print(f"Average Ratings: {doc['ratings_average']}")
-        print(f"Link: https://openlibrary.org/{doc['key']}")
-        print(f"{doc['first_sentence']} \n")
+        print(f"{index + 1}). {doc.get('title', 'Untitled')} by {doc.get('author_name', 'Unavailable')} {doc.get('first_publish_year', '')}.")
+              
+        print(f"Average Ratings: {doc.get('ratings_average', 'Unrated')}")
+        print(f"Link: https://openlibrary.org{doc.get('key', '')}")
+        print(f"{doc.get('first_sentence', '')} \n")
 
 # Finding a book or author by search query
 if args.query:
@@ -118,6 +117,34 @@ if args.title:
 # Why does this give me so few results??
 
 
+# Get a list and the books in it
+# if args.get:
+#     try:
+#         conn = psycopg2.connect(
+#             host=hostname,
+#             database=database,
+#             user=username,
+#             password=password,
+#             port=port_id
+#         )
+#         cur = conn.cursor()
+#         list_name = " ".join(args.get)
+#         sql = "SELECT * FROM books_lists WHERE list_name = (%s)"
+#         cur.execute(sql, (list_name,))
+#         for record in cur.fetchall():
+#             print(record)
+#         conn.commit()
+
+#     except Exception as error:
+#         print(error)
+#     finally:
+#         if cur is not None:      
+#             cur.close()
+#         if conn is not None:
+#             conn.close()
+# Need to insert some books into the lists first
+
+
 # Add a list
 if args.add:
     try:
@@ -128,14 +155,35 @@ if args.add:
             password=password,
             port=port_id
         )
+        cur = conn.cursor()
 
         new_list_name = " ".join(args.add)
-        print(new_list_name)
-
-        cur = conn.cursor()
         sql = "INSERT INTO lists(list_name) VALUES(%s)"
         cur.execute(sql, (new_list_name,))
+        conn.commit()
+    except Exception as error:
+        print(error)
+    finally:
+        if cur is not None:      
+            cur.close()
+        if conn is not None:
+            conn.close()
 
+
+# Delete a list
+if args.delete:
+    try:
+        conn = psycopg2.connect(
+            host=hostname,
+            database=database,
+            user=username,
+            password=password,
+            port=port_id
+        )
+        cur = conn.cursor()
+
+        sql = "DELETE FROM lists WHERE list_id = (%s)"
+        cur.execute(sql, (args.delete,))
         conn.commit()
     except Exception as error:
         print(error)
