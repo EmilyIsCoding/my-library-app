@@ -5,7 +5,7 @@ import requests
 from dotenv import load_dotenv
 load_dotenv()
 
-from list_functions import add_list
+from list_functions import add_list, delete_list
 
 endpoint = "https://openlibrary.org/search.json"
 
@@ -153,26 +153,7 @@ if args.add:
 
 # Delete a list
 if args.delete:
-    try:
-        conn=psycopg2.connect(
-            host=hostname,
-            database=database,
-            user=pg_user,
-            password=pg_password,
-            port=port_id
-        )
-        cur=conn.cursor()
-
-        sql = "DELETE FROM lists WHERE list_id = (%s)"
-        cur.execute(sql, (args.delete,))
-        conn.commit()
-    except Exception as error:
-        print(error)
-    finally:
-        if cur is not None:      
-            cur.close()
-        if conn is not None:
-            conn.close()
+    delete_list(args.delete)
 
 
 # Add book to a list

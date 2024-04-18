@@ -9,19 +9,19 @@ pg_user = os.getenv('PG_USER')
 pg_password = os.getenv('PG_PASSWORD')
 port_id = os.getenv('PORT_ID')
 
-def connect():
-    if conn is None:
-        try:
-            conn=psycopg2.connect(
-                host=hostname,
-                database=database,
-                user=pg_user,
-                password=pg_password,
-                port=port_id
-            )
-            print('Connection opened successfully')
-        except Exception as error:
-            print(error)
+# def connect():
+#     if conn is None:
+#         try:
+#             conn=psycopg2.connect(
+#                 host=hostname,
+#                 database=database,
+#                 user=pg_user,
+#                 password=pg_password,
+#                 port=port_id
+#             )
+#             print('Connection opened successfully')
+#         except Exception as error:
+#             print(error)
 
 
 def add_list(args):
@@ -52,22 +52,29 @@ def add_list(args):
             conn.close()
 
 
-# def delete_list(args):
-#     conn = None
-#     cur = None
+def delete_list(args):
+    conn = None
+    cur = None
 
-#     try:
-#         connect()
-#         cur=conn.cursor()
+    try:
+        conn=psycopg2.connect(
+            host=hostname,
+            database=database,
+            user=pg_user,
+            password=pg_password,
+            port=port_id
+        )
+        cur=conn.cursor()
 
-#         sql = "DELETE FROM lists WHERE list_id = (%s)"
-#         cur.execute(sql, (args,))
-#         conn.commit()
-#     except Exception as error:
-#         print(error)
-#     finally:
-#         if cur is not None:      
-#             cur.close()
-#         if conn is not None:
-#             conn.close()
+        sql = "DELETE FROM lists WHERE list_id = (%s)"
+        cur.execute(sql, (args,))
+        conn.commit()
+        print("List has been deleted")
+    except Exception as error:
+        print(error)
+    finally:
+        if cur is not None:      
+            cur.close()
+        if conn is not None:
+            conn.close()
     
