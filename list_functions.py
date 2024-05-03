@@ -51,6 +51,31 @@ def add_list(args):
         if conn is not None:
             conn.close()
 
+def get_lists():
+    conn = None
+    cur = None
+    try:
+        conn=psycopg2.connect(
+            host=hostname,
+            database=database,
+            user=pg_user,
+            password=pg_password,
+            port=port_id
+        )
+        cur=conn.cursor()
+        cur.execute("SELECT * FROM lists;")
+        rows = cur.fetchall()
+        conn.close()
+        for row in rows:
+            print(row)
+    except Exception as error:
+        print(error)
+    finally:
+        if cur is not None:      
+            cur.close()
+        if conn is not None:
+            conn.close()
+
 
 def delete_list(args):
     conn = None
