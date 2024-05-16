@@ -10,6 +10,8 @@ import list_functions
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 
+import models
+
 endpoint = "https://openlibrary.org/search.json"
 
 parser = argparse.ArgumentParser(
@@ -87,18 +89,6 @@ cur = None
 #     if conn is not None:
 #         conn.close()
 
-
-# SQLAlchemy with PSQL
-engine = create_engine(database_url)
-
-stmt = text("SELECT x, y FROM some_table WHERE y > :y ORDER BY x, y")
-with Session(engine) as session:
-    result = session.execute(
-        text("UPDATE some_table SET y=:y WHERE x=:x"),
-        [{"x": 9, "y": 11}, {"x": 13, "y": 15}],
-    )
-session.commit()
-
 def query_book(url):
     r = requests.get(url)
     print(r.json()["numFound"])
@@ -165,7 +155,8 @@ if args.title:
 
 # Add a list
 if args.add:
-    list_functions.add_list(args.add)
+    list_name = " ".join(args.add)
+    models.add_list(list_name)
 
 # Get all lists
 # TODO: I added this in just to grab the data another way, but I'm not sure if I want to add an argument?

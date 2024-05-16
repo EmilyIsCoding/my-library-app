@@ -1,7 +1,12 @@
-from sqlalchemy import Table, ForeignKey, Integer, String, create_engine, text, Column
+from sqlalchemy import Table, ForeignKey, Integer, String, create_engine, Column
 from sqlalchemy.orm import DeclarativeBase, relationship, mapped_column, Session, Mapped
 from typing import List as TypingList
 
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+database_url = os.getenv('DATABASE_URL')
 
 class Base(DeclarativeBase):
     pass
@@ -29,20 +34,13 @@ class Book(Base):
     open_library_link: Mapped[str] = mapped_column(String(100), nullable=False)
     lists: Mapped[TypingList["List"]] = relationship(secondary=BookList, back_populates="books")
 
-import os
-from dotenv import load_dotenv
-load_dotenv()
 
-database_url = os.getenv('DATABASE_URL')
+def add_list(list_name):
+    engine = create_engine(database_url)
+    Base.metadata.create_all(bind=engine)
 
-# SQLAlchemy with PSQL
-engine = create_engine(database_url)
-Base.metadata.create_all(bind=engine)
-
-
-with Session(engine) as session:
-    list = List(list_name="SQLAlchemy ORM")
-    session.add(list)
-    session.commit()
-    # result = session.query(List).all()
-    # print(result)
+    with Session(engine) as session:
+        list = List(list_name=list_name)
+        session.add(list)
+        print(f"List {list_name} is created.")
+        session.commit()
