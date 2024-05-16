@@ -1,4 +1,4 @@
-from sqlalchemy import Table, ForeignKey, Integer, String, create_engine, Column, select
+from sqlalchemy import Table, ForeignKey, Integer, String, create_engine, Column, select, delete
 from sqlalchemy.orm import DeclarativeBase, relationship, mapped_column, Session, Mapped
 from typing import List as TypingList
 
@@ -54,3 +54,11 @@ def get_lists():
 
         for list in session.scalars(stmt):
             print(list.list_name)
+
+def delete_list(list_id):
+    engine = create_engine(database_url)
+    Base.metadata.create_all(bind=engine)
+
+    with Session(engine) as session:
+        session.query(List).filter(List.list_id==list_id).delete()
+        session.commit()

@@ -165,7 +165,7 @@ if args.get_all_lists:
 
 # Delete a list
 if args.delete:
-    list_functions.delete_list(args.delete)
+    models.delete_list(args.delete)
 
 
 # Add book to a list
