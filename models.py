@@ -1,4 +1,4 @@
-from sqlalchemy import Table, ForeignKey, Integer, String, create_engine, Column
+from sqlalchemy import Table, ForeignKey, Integer, String, create_engine, Column, select
 from sqlalchemy.orm import DeclarativeBase, relationship, mapped_column, Session, Mapped
 from typing import List as TypingList
 
@@ -44,3 +44,13 @@ def add_list(list_name):
         session.add(list)
         print(f"List {list_name} is created.")
         session.commit()
+
+def get_lists():
+    engine = create_engine(database_url)
+    Base.metadata.create_all(bind=engine)
+
+    with Session(engine) as session:
+        stmt = select(List)
+
+        for list in session.scalars(stmt):
+            print(list.list_name)

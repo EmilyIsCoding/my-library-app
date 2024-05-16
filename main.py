@@ -161,7 +161,7 @@ if args.add:
 # Get all lists
 # TODO: I added this in just to grab the data another way, but I'm not sure if I want to add an argument?
 if args.get_all_lists:
-    list_functions.get_lists()
+    models.get_lists()
 
 # Delete a list
 if args.delete:
