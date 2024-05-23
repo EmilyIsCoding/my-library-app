@@ -52,8 +52,13 @@ def get_lists():
     with Session(engine) as session:
         stmt = select(List)
 
+        lists = []
         for list in session.scalars(stmt):
-            print(list.list_name)
+            # print(list.list_id, list.list_name)
+            numbered_list = f"{list.list_id}. {list.list_name}"
+            lists.append(numbered_list)
+        # print(lists)
+        return lists
 
 def delete_list(list_id):
     engine = create_engine(database_url)
@@ -62,3 +67,35 @@ def delete_list(list_id):
     with Session(engine) as session:
         session.query(List).filter(List.list_id==list_id).delete()
         session.commit()
+
+
+
+def add_book(book_dict):
+    engine = create_engine(database_url)
+    Base.metadata.create_all(bind=engine)
+
+    with Session(engine) as session:
+        book = Book(
+            title=book_dict["title"],
+            author=book_dict["author"],
+            completion_status="0%",
+            open_library_link=book_dict["open_library_link"]
+            )
+        session.add(book)
+        print(f"{book_dict['title']} by {book_dict['author']} is created.")
+        session.commit()
+
+
+def add_book_to_list(list_id):
+    engine = create_engine(database_url)
+    Base.metadata.create_all(bind=engine)
+
+    with Session(engine) as session:
+        list = session.query(List).get(list_id)
+        book = session.query(Book).order_by(Book.book_id.desc()).first()
+
+        list.books.append(book)
+        book.lists.append(list)
+
+        session.commit()
+        print(f"Successfully added {book.title} to {list.list_name}")

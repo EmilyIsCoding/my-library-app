@@ -1,15 +1,8 @@
 import argparse
 import os
-import psycopg2
 import requests
 from dotenv import load_dotenv
 load_dotenv()
-
-import list_functions
-
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import Session
-
 import models
 
 endpoint = "https://openlibrary.org/search.json"
@@ -29,11 +22,9 @@ group.add_argument("-g", "--get", nargs="+", help="View a book list by name")
 group.add_argument("-get", "--get_all_lists", help="Retrieves all lists")
 group.add_argument("-a", "--add", nargs="+", type=str, help="Add a list")
 # group.add_argument("-e", "--edit", nargs="+", help="Edit a book list by id")
-# might also be subparse...
 group.add_argument("-d", "--delete", help="Delete a book list by id")
 group.add_argument("-b", "--book", metavar=("Add a book to a list"),
                    nargs="+", help="Search by title to add a book to a list")
-# might need subparse for the above ^ a subparse of query?
 args = parser.parse_args()
 
 hostname=os.getenv('HOSTNAME')
@@ -43,8 +34,8 @@ pg_password=os.getenv('PG_PASSWORD')
 port_id=os.getenv('PORT_ID')
 database_url = os.getenv('DATABASE_URL')
 
-conn = None
-cur = None
+# conn = None
+# cur = None
 
 # Run this the first time
 # try:
@@ -161,7 +152,9 @@ if args.add:
 # Get all lists
 # TODO: I added this in just to grab the data another way, but I'm not sure if I want to add an argument?
 if args.get_all_lists:
-    models.get_lists()
+    lists = models.get_lists()
+    for list in lists:
+        print(list)
 
 # Delete a list
 if args.delete:
@@ -175,9 +168,7 @@ if args.delete:
 
 if args.book:
     try:
-        book_dict = {}
-        list_dict = {}
-
+        # searches for book
         book_title = args.book
 
         url = f"{endpoint}?title={book_title}&limit=100"
@@ -185,6 +176,7 @@ if args.book:
         
         query_book(url)
 
+        # allows user to select book from query results
         number_book = input("Select a book from the list by number or input 'Q' to quit: ")
 
         if number_book.isdigit() == False and number_book.upper() != "Q":
@@ -204,62 +196,23 @@ if args.book:
                 "open_library_link": f"https://openlibrary.org{book.get('key', '')}"
             }
 
-            print(book_dict)
+            # shows list of Lists to user
+            lists = models.get_lists()
+            list_ids = []
+            for list in lists:
+                print(list)
+                list_ids.append(int(list.split(".")[0]))
 
-            try:
-                conn=psycopg2.connect(
-                host=hostname,
-                database=database,
-                user=pg_user,
-                password=pg_password,
-                port=port_id
-                )
-                cur=conn.cursor()
+            # validates user input for List
+            number_list = input(f"\n Select the list to add '{book['title']}' to: ")
 
-                cur.execute("SELECT * FROM lists;")
-                rows=cur.fetchall()
-                conn.commit()
-                
-                for index, row in enumerate(rows):
-                    print(f"{index + 1}. {row[1]}")
-                    # make also make a dict... with the # of the list and the list name!
-                    list_dict[index + 1] = row[1]
-                print(list_dict)
-
-            except Exception as error:
-                print(error)
-            finally:
-                if cur is not None:      
-                    cur.close()
-                if conn is not None:
-                    conn.close()
-
-            number_book = input(f"Select the list to add '{book['title']}' to: ")
-            # TODO: Check this input and make sure it's within the list or whatever
-            
-            # Valid input? Maybe make this a function
-            # If it is, then grab the one that's in dict and then do a SQL adding it in
-
-            if number_book.isdigit() == False:
-                print("Please input a valid number.")
-            elif int(number_book) > len(list_dict) or int(number_book) < len(list_dict):
-                print("Number out of range.")
-            elif number_book.isdigit() and int(number_book) <= len(list_dict):
-                try:
-                    conn=psycopg2.connect(
-                    host=hostname,
-                    database=database,
-                    user=pg_user,
-                    password=pg_password,
-                    port=port_id
-                    )
-                    cur=conn.cursor()
-
-                    # this part idk I gotta connect the tables together with a join?
-                except Exception as error:
-                    print(error)
-
-            # TODO: Now we add the book to book_lists? I might have misunderstood how to make it auto-populate in between tho
+            if number_list.isdigit() == False:
+                print("Please input a number id.")
+            elif int(number_list) not in list_ids:
+                print("Please input a valid id.")
+            elif number_list.isdigit() and int(number_list) in list_ids:
+                models.add_book(book_dict)
+                models.add_book_to_list(int(number_list))
 
     except Exception as error:
         print(error)
