@@ -19,12 +19,13 @@ group.add_argument("-author", nargs="+", type=str, help="Author of the book")
 
 # List/Book commands
 group.add_argument("-g", "--get", nargs="+", help="View a book list by name")
-group.add_argument("-get", "--get_all_lists", help="Retrieves all lists")
+group.add_argument("-get", "--get_all_lists", action="store_true", help="Retrieves all lists")
 group.add_argument("-a", "--add", nargs="+", type=str, help="Add a list")
 # group.add_argument("-e", "--edit", nargs="+", help="Edit a book list by id")
 group.add_argument("-d", "--delete", help="Delete a book list by id")
 group.add_argument("-b", "--book", metavar=("Add a book to a list"),
                    nargs="+", help="Search by title to add a book to a list")
+# delete book from a list
 args = parser.parse_args()
 
 hostname=os.getenv('HOSTNAME')
@@ -198,3 +199,5 @@ if args.book:
 
     except Exception as error:
         print(error)
+
+
