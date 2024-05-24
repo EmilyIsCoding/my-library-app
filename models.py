@@ -45,6 +45,19 @@ def add_list(list_name):
         print(f"List {list_name} is created.")
         session.commit()
 
+def get_list(list_name):
+    engine = create_engine(database_url)
+    Base.metadata.create_all(bind=engine)
+
+    with Session(engine) as session:
+        stmt = select(Book.title, Book.author, Book.completion_status, Book.open_library_link).where(List.list_name == list_name)
+        result = session.execute(stmt)
+        print(f"***{list_name}*** \n")
+        for index, book in enumerate(result):
+            print(f"{index + 1}). {book.title} by {book.author}")
+            print(f"Completion Status: {book.completion_status}")
+            print(f"Link: {book.open_library_link} \n")
+
 def get_lists():
     engine = create_engine(database_url)
     Base.metadata.create_all(bind=engine)

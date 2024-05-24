@@ -118,31 +118,9 @@ if args.title:
 
 
 # Get a list and the books in it
-# if args.get:
-#     try:
-#         conn = psycopg2.connect(
-#             host=hostname,
-#             database=database,
-#             user=pg_user,
-#             password=pg_password,
-#             port=port_id
-#         )
-#         cur = conn.cursor()
-#         list_name = " ".join(args.get)
-#         sql = "SELECT * FROM books_lists WHERE list_name = (%s)"
-#         cur.execute(sql, (list_name,))
-#         for record in cur.fetchall():
-#             print(record)
-#         conn.commit()
-
-#     except Exception as error:
-#         print(error)
-#     finally:
-#         if cur is not None:      
-#             cur.close()
-#         if conn is not None:
-#             conn.close()
-# Need to insert some books into the lists first
+if args.get:
+    list_name = " ".join(args.get)
+    models.get_list(list_name)
 
 # Add a list
 if args.add:
@@ -213,6 +191,10 @@ if args.book:
             elif number_list.isdigit() and int(number_list) in list_ids:
                 models.add_book(book_dict)
                 models.add_book_to_list(int(number_list))
+
+            # TODO: Having to search for a book creates a new entry each time... think of a better user flow that's better for the DB too
+            # or check by open_library_link before adding to db
+            # then we query by it I guess
 
     except Exception as error:
         print(error)
